@@ -2,20 +2,25 @@
 import MySQLdb
 import MySQLdb.cursors
 import json
+import time
 
-from amqplib.client_0_8 import amqp
+import amqplib.client_0_8 as amqp
 
-conn = Connection('localhost')
-conn.open()
-sess = conn.session()
-receiver = sess.receiver('results')
+conn = amqp.Connection(host='localhost',user='guest',password='guest')
+ch = conn.channel()
 
 db = MySQLdb.connect('localhost','root','','DB_NAME')
 c = db.cursor(MySQLdb.cursors.DictCursor)
 
 while True:
-	msg = receiver.fetch()
-	data = json.loads(msg.content)
+	msg = ch.basic_get('results')
+	if msg is None:
+		print "Nothing waiting"
+		time.sleep(1)
+		continue
+	print msg
+	data = json.loads(msg.body)
+	ch.basic_ack(msg.delivery_tag)
 
 	# probe
 	c.execute("select * from probes where uuid = %s", [data['probe_uuid']])
@@ -55,5 +60,11 @@ while True:
 		[probe['uuid']]
 		)
 	db.commit()
-	sess.acknowledge()
 
+	ch.basic_publish(
+		amqp.Message(json.dumps({
+		'url': data['url'],
+		'network_name': data['network_name'],
+		'status': data['status'],
+		})), 
+		'org.results', msg.routing_key)
