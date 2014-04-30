@@ -2,7 +2,8 @@
 import MySQLdb
 import MySQLdb.cursors
 import json
-from qpid.messaging import *
+
+from amqplib.client_0_8 import amqp
 
 conn = Connection('localhost')
 conn.open()
