@@ -20,7 +20,7 @@ $conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 $result = $conn->query("select id, name from isps", array());
 while ($isp = $result->fetch_assoc()) {
 	$c = 0;
-	$res2 = $conn->query("select urlid, url from urls where source = 'alexa'", array());
+	$res2 = $conn->query("select url, hash from urls where source = 'alexa'", array());
 	while ($url = $res2->fetch_assoc()) {
 		$c += 1;
 		$msgbody = json_encode($url);
