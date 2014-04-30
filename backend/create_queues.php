@@ -1,29 +1,32 @@
-
 <?php
 
 $dir = dirname(__FILE__);
 include "$dir/../api/1.2/libs/DB.php";
 $conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 
-function runcmd($cmdline) {
-	print "Running: " . $cmdline . "\n";
-	system($cmdline);
-}
+$amqp = new AMQPConnection(array('host'=>'localhost','user'=>'guest', 'password'=>'guest'));
+$amqp->connect();
 
-runcmd("qpid-config add exchange topic org.blocked --durable");
+$ch = new AMQPChannel($amqp);
+
+$ex = new AMQPExchange($ch);
+$ex->setName('org.blocked');
+$ex->setType('topic');
+$ex->declare();
+
+function createqueue($ch, $name, $ex, $key) {
+	$q = new AMQPQueue($ch);
+	$q->setName($name);
+	$q->setFlags(AMQP_DURABLE);
+	$q->declare();
+	$q->bind('org.blocked', $key);
+}
 
 $result = $conn->query("select lower(replace(name,' ','_')) as name from isps", array());
 while ($isp = $result->fetch_assoc()) {
-	foreach(array('public','org') as $type) {
-		$name = $isp['name'] . '.' . $type;
-		runcmd("qpid-config add queue url.{$name} --durable --argument x-qpid-priorities=10");
-		if ($type == 'public') {
-			runcmd("qpid-config bind org.blocked url.{$name} 'url.{$type}' ");
-		} else {			
-			runcmd("qpid-config bind org.blocked url.{$name} 'url.*' ");
-		}
-	}
+	createqueue($ch, 'url.'.$isp['name'].'.public', $ex, 'url.public');
+	createqueue($ch, 'url.'.$isp['name'].'.org', $ex, 'url.*');
 }
 
-runcmd("qpid-config add queue results --durable");
-runcmd("qpid-config bind org.blocked results 'results.*'");
+createqueue($ch, "results", $ex, "results.*");
+
