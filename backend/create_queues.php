@@ -9,12 +9,17 @@ $amqp->connect();
 
 $ch = new AMQPChannel($amqp);
 
+$ex2 = new AMQPExchange($ch);
+$ex2->setName('org.results');
+$ex2->setType('topic');
+$ex2->declare();
+
 $ex = new AMQPExchange($ch);
 $ex->setName('org.blocked');
 $ex->setType('topic');
 $ex->declare();
 
-function createqueue($ch, $name, $ex, $key) {
+function createqueue($ch, $name,  $key) {
 	$q = new AMQPQueue($ch);
 	$q->setName($name);
 	$q->setFlags(AMQP_DURABLE);
@@ -24,9 +29,9 @@ function createqueue($ch, $name, $ex, $key) {
 
 $result = $conn->query("select lower(replace(name,' ','_')) as name from isps", array());
 while ($isp = $result->fetch_assoc()) {
-	createqueue($ch, 'url.'.$isp['name'].'.public', $ex, 'url.public');
-	createqueue($ch, 'url.'.$isp['name'].'.org', $ex, 'url.*');
+	createqueue($ch, 'url.'.$isp['name'].'.public',  'url.public');
+	createqueue($ch, 'url.'.$isp['name'].'.org',  'url.*');
 }
 
-createqueue($ch, "results", $ex, "results.*");
+createqueue($ch, "results",  "results.#");
 

@@ -161,7 +161,16 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 		);
 	$request_id = $conn->insert_id;
 
-	return $app->json(array('success' => true, 'uuid' => $request_id), 201);
+	$msgbody = json_encode(array('url'=>$req->get('url'), 'hash'=>md5($req->get('url'))));
+	
+	$amqp = new AMQPConnection(array('host'=>'localhost','user'=>'guest', 'password'=>'guest'));
+	$amqp->connect();
+	$ch = new AMQPChannel($amqp);
+	$ex = new AMQPExchange($ch);
+	$ex->setName('org.blocked');
+	$ex->publish($msgbody, 'url.org', AMQP_NOPARAM, array('priority'=>2));
+
+	return $app->json(array('success' => true, 'uuid' => $request_id, 'hash' => md5($req->get('url'))), 201);
 });
 	
 $app->get('/status/user',function(Request $req) use ($app) {
