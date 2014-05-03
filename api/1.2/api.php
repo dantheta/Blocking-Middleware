@@ -40,10 +40,10 @@ $app['service.result.process'] = function($app) {
 	return new ResultProcessorService(
 		$app['service.db'],
 		$app['db.url.load'],
-		$app['db.isp.load'],
-		$app['db.probe.load']
+		$app['db.probe.load'],
+		$app['db.isp.load']
 		);
-});
+};
 
 function checkParameters($req, $params) {
 	# check that required GET/POST parameters are present
@@ -79,7 +79,8 @@ function checkAdministrator($user) {
 }
 
 $app->error(function(APIException $e, $code) {
-	switch(get_class($e)) {
+	$error_class = get_class($e);
+	switch($error_class) {
 		case "ConfigLoadError":
 			$code = 404;
 			$message = "Config version or format not found";
@@ -124,7 +125,7 @@ $app->error(function(APIException $e, $code) {
 			$message = "An error occurred gathering IP information";
 			break;
 	};
-	error_log("Error response: $code, $message");
+	error_log("Error response: $code, $message, $error_class");
 	return new JsonResponse(
 		array('success'=>false, 'error'=>$message), $code
 		);
@@ -358,9 +359,10 @@ $app->post('/response/httpt', function(Request $req) use ($app) {
 		'network_name' => $req->get('network_name'),
 		'status' => $req->get('status'),
 		'http_status' => $req->get('http_status'),
+		'url' => $req->get('url')
 		);
 
-	$app['result.processor']->process_result($result, $probe);
+	$app['service.result.process']->process_result($result, $probe);
 
 	return $app->json(array('success' => true, 'status' => 'ok'));
 
