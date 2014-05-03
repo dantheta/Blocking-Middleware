@@ -23,10 +23,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.network :forwarded_port, guest: 80, host: 8080
   config.vm.network :forwarded_port, guest: 5672, host: 5672
 
-  config.vm.provision "ansible" do |ansible|
-    ansible.inventory_file = 'ansible/vagrant_ansible_inventory_default'
-    ansible.playbook = 'ansible/ansible.yml'
-  end
+  #config.vm.provision "ansible" do |ansible|
+  #  ansible.inventory_file = 'ansible/vagrant_ansible_inventory_default'
+  #  ansible.playbook = 'ansible/ansible.yml'
+  #end
 
   config.vm.synced_folder "/home/daniel/Projects/ORG/OrgProbe","/probe"
 
