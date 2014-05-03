@@ -36,6 +36,15 @@ $app['service.ip.query'] = function($app) {
 	return new IpLookupService($app['service.db']);
 };
 
+$app['service.result.process'] = function($app) {
+	return new ResultProcessorService(
+		$app['service.db'],
+		$app['db.url.load'],
+		$app['db.isp.load'],
+		$app['db.probe.load']
+		);
+});
+
 function checkParameters($req, $params) {
 	# check that required GET/POST parameters are present
 	$keys = array_merge($req->request->keys(), $req->query->keys());
@@ -327,7 +336,6 @@ $app->post('/response/httpt', function(Request $req) use ($app) {
 
 	$probe = $app['db.probe.load']->load($req->get('probe_uuid'));
 	checkProbe($probe);
-	$url = $app['db.url.load']->load($req->get('url'));
 
 	Middleware::checkMessageTimestamp($req->get('date'));
 
@@ -344,27 +352,15 @@ $app->post('/response/httpt', function(Request $req) use ($app) {
 		$req->get('signature')
 	);
 
-	$isp = $app['db.isp.load']->load($req->get('network_name'));
-
-	$conn = $app['service.db'];
-	$conn->query(
-		"insert into results(urlID,probeID,config,ip_network,status,http_status,network_name, created) values (?,?,?,?,?,?,?,now())",
-		array(
-			$url['urlID'],$probe['id'], $req->get('config'),$req->get('ip_network'),
-			$req->get('status'),$req->get('http_status'), $req->get('network_name')
-		)
-	);
-
-	$conn->query(
-		"update urls set polledSuccess = polledSuccess + 1 where urlID = ?",
-		array($url['urlID'])
-		);
-	$conn->query(
-		"update queue set results=results+1 where urlID = ? and IspID = ?",
-		array($url['urlID'], $isp['id'])
+	$result = array(
+		'config' => $req->get('config'),
+		'ip_network' => $req->get('ip_network'),
+		'network_name' => $req->get('network_name'),
+		'status' => $req->get('status'),
+		'http_status' => $req->get('http_status'),
 		);
 
-	$app['db.probe.load']->updateRespRecv($probe['uuid']);
+	$app['result.processor']->process_result($result, $probe);
 
 	return $app->json(array('success' => true, 'status' => 'ok'));
 
