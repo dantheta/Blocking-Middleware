@@ -13,7 +13,7 @@ $amqp = new AMQPConnection(array('host'=>'localhost','user'=>'guest', 'password'
 $amqp->connect();
 $ch = new AMQPChannel($amqp);
 $ex = new AMQPExchange($ch);
-$ex->setName('org.blocked');
+#$ex->setName('org.blocked');
 
 $conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 
@@ -24,9 +24,10 @@ while ($isp = $result->fetch_assoc()) {
 	while ($url = $res2->fetch_assoc()) {
 		$c += 1;
 		$msgbody = json_encode($url);
-		$ex->publish($msgbody, 'url.org', AMQP_NOPARAM, array('priority'=>2));
+		$ex->publish($msgbody, 'url.t-mobile.org', AMQP_NOPARAM, array('priority'=>2));
 	}
 
 	print "Added {$conn->affected_rows} rows for isp: {$isp['name']}\n";
+	break;
 }
 

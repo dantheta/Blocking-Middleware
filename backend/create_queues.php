@@ -29,6 +29,9 @@ function createqueue($ch, $name,  $key) {
 
 $result = $conn->query("select lower(replace(name,' ','_')) as name from isps", array());
 while ($isp = $result->fetch_assoc()) {
+	if (strpos($isp['name'], ',') !== false) {
+		continue;
+	}
 	createqueue($ch, 'url.'.$isp['name'].'.public',  'url.public');
 	createqueue($ch, 'url.'.$isp['name'].'.org',  'url.*');
 }
