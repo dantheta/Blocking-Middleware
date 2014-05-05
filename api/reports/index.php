@@ -110,7 +110,7 @@ function pagination($page, $name) {
 
   echo "<ul class=\"pagination\">";
   if ($prevpage >= 0) {
-    echo "<li><a href=\"index.php?rpt=" . $ent($name) . "&page=$prevpage\">&laquo;</a></li>";
+    echo "<li><a href=\"index.php?rpt=" . ent($name) . "&page=$prevpage\">&laquo;</a></li>";
   } else {
     echo "<li class=\"disabled\"><a href=\"\">&laquo;</a></li>";
   }
