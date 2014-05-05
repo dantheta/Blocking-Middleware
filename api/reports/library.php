@@ -27,4 +27,11 @@ $REPORTS = array(
 			order by url, network_name",
 		'paged' => true,
 	),
+	'all_blocked' => array(
+		'title' => 'All blocked sites',
+		'description' => "List of all blocked sites, most recent first',
+		'sql' => 'select url, network_name, created probed_at, status
+		from results inner join urls using(urlid)
+		where status = 'blocked' order by created desc",
+	),
 );
