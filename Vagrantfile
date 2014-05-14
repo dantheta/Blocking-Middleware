@@ -28,6 +28,4 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   #  ansible.playbook = 'ansible/ansible.yml'
   #end
 
-  config.vm.synced_folder "/home/daniel/Projects/ORG/OrgProbe","/probe"
-
 end
