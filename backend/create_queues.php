@@ -2,21 +2,21 @@
 
 $dir = dirname(__FILE__);
 include "$dir/../api/1.2/libs/DB.php";
+include "$dir/../api/1.2/libs/amqp.php";
 $conn = new APIDB($dbhost, $dbuser, $dbpass, $dbname);
 
-$amqp = new AMQPConnection(array('host'=>'localhost','user'=>'guest', 'password'=>'guest'));
-$amqp->connect();
-
-$ch = new AMQPChannel($amqp);
+$ch = amqp_connect();
 
 $ex2 = new AMQPExchange($ch);
 $ex2->setName('org.results');
 $ex2->setType('topic');
+$ex2->setFlags(AMQP_DURABLE);
 $ex2->declare();
 
 $ex = new AMQPExchange($ch);
 $ex->setName('org.blocked');
 $ex->setType('topic');
+$ex->setFlags(AMQP_DURABLE);
 $ex->declare();
 
 function createqueue($ch, $name,  $key) {

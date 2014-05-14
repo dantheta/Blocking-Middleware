@@ -3,6 +3,7 @@
 require_once __DIR__."/../../backend/silex/vendor/autoload.php";
 
 include_once "libs/DB.php";
+include_once "libs/amqp.php";
 include_once "libs/pki.php";
 include_once "libs/password.php";
 include_once "libs/exceptions.php";
@@ -18,6 +19,10 @@ $app['debug'] = true;
 $app['service.db'] = $app->share(function() {
 	global $dbuser, $dbpass, $dbhost, $dbname;
 	return new APIDB($dbhost, $dbuser, $dbpass, $dbname);
+});
+
+$app['service.amqp'] = $app->share(function() {
+	return amqp_connect();
 });
 
 $app['db.user.load'] = function($app) {
@@ -173,9 +178,7 @@ $app->post('/submit/url', function(Request $req) use ($app) {
 
 	$msgbody = json_encode(array('url'=>$req->get('url'), 'hash'=>md5($req->get('url'))));
 	
-	$amqp = new AMQPConnection(array('host'=>'localhost','user'=>'guest', 'password'=>'guest'));
-	$amqp->connect();
-	$ch = new AMQPChannel($amqp);
+	$ch = $app['service.amqp'];
 	$ex = new AMQPExchange($ch);
 	$ex->setName('org.blocked');
 	$ex->publish($msgbody, 'url.org', AMQP_NOPARAM, array('priority'=>2));

@@ -1,13 +1,12 @@
 <?php
 
 include_once __DIR__ . "/../api/1.2/libs/DB.php";
+include_once __DIR__ . "/../api/1.2/libs/amqp.php";
 include_once __DIR__ . "/../api/1.2/libs/pki.php";
 include_once __DIR__ . "/../api/1.2/libs/exceptions.php";
 include_once __DIR__ . "/../api/1.2/libs/services.php";
 
-$amqp = new AMQPConnection(array('host'=>'localhost','user'=>'guest', 'password'=>'guest'));
-$amqp->connect();
-$ch = new AMQPChannel($amqp);
+$ch = amqp_connect();
 
 $ex = new AMQPExchange($ch);
 $ex->setName('org.results');

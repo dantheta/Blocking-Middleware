@@ -1,9 +1,8 @@
 <?php
 
+include_once __DIR__ . "/../api/1.2/libs/amqp.php";
 
-$amqp = new AMQPConnection(array('host'=>'localhost','user'=>'guest', 'password'=>'guest'));
-$amqp->connect();
-$ch = new AMQPChannel($amqp);
+$ch = amqp_connect();
 
 
 print "Removing: " . $argv[1] . "\n";

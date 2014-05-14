@@ -2,6 +2,7 @@
 
 $dir = dirname(__FILE__);
 include "$dir/../api/1.2/libs/DB.php";
+include "$dir/../api/1.2/libs/amqp.php";
 
 /*
 This script will backfill the queue table with all submitted URLs.
@@ -9,9 +10,7 @@ Run from cron to feed the queue when:
  * New URLs have been added
  * New ISPs have been added
 */
-$amqp = new AMQPConnection(array('host'=>'localhost','user'=>'guest', 'password'=>'guest'));
-$amqp->connect();
-$ch = new AMQPChannel($amqp);
+$ch = amqp_connect();
 $ex = new AMQPExchange($ch);
 #$ex->setName('org.blocked');
 
